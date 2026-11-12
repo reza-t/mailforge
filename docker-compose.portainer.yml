@@ -1,0 +1,34 @@
+# Portainer / UI-managed stack variant (no build, no relative paths, no .env file on disk).
+# Variables come from Portainer's "Environment variables" (see docs/NAS.md -> Portainer).
+services:
+  mailforge-worker:
+    image: ${MAILFORGE_IMAGE:-ghcr.io/reza-t/mailforge-worker:latest}
+    container_name: mailforge-worker
+    command: ["sleep", "infinity"]
+    user: "${MAILFORGE_UID:-1000}:${MAILFORGE_GID:-1000}"
+    env_file: stack.env            # Portainer writes your stack variables to this file
+    environment:
+      TZ: ${TZ:-UTC}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - ${MAILFORGE_DIR:-/volume1/docker/mailforge}/config:/app/config:ro
+      - ${MAILFORGE_DIR:-/volume1/docker/mailforge}/data:/app/data
+      - ${MAILFORGE_DIR:-/volume1/docker/mailforge}/reports:/app/reports
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.mailforge-daily.schedule: "0 30 7 * * *"
+      ofelia.job-exec.mailforge-daily.command: "python -m mailforge.main"
+    restart: unless-stopped
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    command: daemon --docker
+    depends_on: [mailforge-worker]
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped

@@ -60,6 +60,28 @@ cd /volume1/docker/mailforge && git pull && sudo docker compose pull && sudo doc
 | Job never fires | Check `TZ`; `docker compose logs ofelia` should list `mailforge-daily` |
 | No email, report saved | See worker log: SMTP/app-password problem; the `.md` is still in `reports/` |
 
+## Running it with Portainer
+
+Use `docker-compose.portainer.yml` (no build step, absolute paths, variables from Portainer instead of a `.env` file).
+
+1. **Create the folders on the NAS** (File Station or SSH): `/volume1/docker/mailforge/{config,data,reports}` (adjust the path for your NAS, e.g. a UGREEN shared folder).
+   Set ownership of `data` and `reports` to the UID/GID you will use (`id <user>`), and put your edited `accounts.yaml` (from `config/accounts.example.yaml`) into `config/`. Secrets stay out of it; it only names env vars.
+2. **Portainer → Stacks → Add stack**, name `mailforge`.
+   - *Build method* **Repository**: URL `https://github.com/reza-t/mailforge`, reference `refs/heads/main`, compose path `docker-compose.portainer.yml`.
+     (Or choose **Web editor** and paste the contents of that file.)
+3. **Environment variables → Advanced mode**, paste the contents of your filled-in `.env` (see `.env.example`): `ANTHROPIC_API_KEY`, `TZ`, `MAILFORGE_UID`, `MAILFORGE_GID`, delivery settings, and each account's credentials.
+   Add `MAILFORGE_DIR=/volume1/docker/mailforge` if your folder is elsewhere.
+4. **Deploy the stack.** If the image pull is denied, make the GHCR package public or add ghcr.io under Portainer → Registries.
+5. **Test:** Containers → `mailforge-worker` → **Console** → *Connect* with command `/bin/sh`, then:
+   ```
+   python -m mailforge.main --dry-run     # fetch + filter only
+   python -m mailforge.main --force       # real run, emails the report
+   ```
+   Check `reports/` on the NAS and your inbox. After that the Ofelia container runs it daily at 07:30 (`TZ`). Ofelia logs: Containers → `ofelia` → Logs.
+6. **Update:** Stacks → `mailforge` → **Pull and redeploy** (re-pulls the image).
+
+Notes: Portainer stores the variables (including your API key) in its own database, so protect the Portainer login. Changing `accounts.yaml` needs no redeploy; restart the `mailforge-worker` container only if you change variables.
+
 ## UGREEN (UGOS / UGOS Pro)
 
 UGREEN NAS models (DXP/DH/iDX series) are x86-64, so the prebuilt GHCR image works. The steps match the Synology ones above, with these differences:
