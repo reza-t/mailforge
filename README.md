@@ -91,4 +91,6 @@ Put client IDs and refresh tokens into `.env` under the names referenced by `acc
 pip install -r worker/requirements.txt pytest ruff && ruff check . && pytest -q
 ```
 
+Running on a NAS: see [docs/NAS.md](docs/NAS.md).
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for adding providers or delivery channels. MIT licensed.
