@@ -36,3 +36,23 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Same image plus the Claude Code CLI (for llm_backend: "cli" / subscription auth)
+      - id: meta_cli
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}-worker
+          flavor: suffix=-cli
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
+            type=semver,pattern={{version}}
+      - uses: docker/build-push-action@v7
+        with:
+          context: worker
+          build-args: INSTALL_CLAUDE_CLI=true
+          push: true
+          tags: ${{ steps.meta_cli.outputs.tags }}
+          labels: ${{ steps.meta_cli.outputs.labels }}
+          cache-from: type=gha,scope=cli
+          cache-to: type=gha,mode=max,scope=cli

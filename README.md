@@ -75,8 +75,17 @@ Put client IDs and refresh tokens into `.env` under the names referenced by `acc
 - Prices in `llm/anthropic_sdk.py` are defaults — verify against current Anthropic pricing or override with `settings.pricing_per_mtok`. Unknown models are costed at the higher tier.
 - No sampling parameters (`temperature`, `top_p`, `top_k`) are sent.
 
-`llm_backend: "cli"` runs headless `claude -p --bare --tools ""` with the prompt on stdin; build with
-`INSTALL_CLAUDE_CLI: "true"` in `docker-compose.yml`.
+### Using a Claude subscription instead of an API key
+
+`llm_backend: "cli"` runs headless `claude -p --tools ""` with the prompt on stdin (no API key needed):
+
+1. On a PC with Claude Code installed, run `claude setup-token` and copy the token it prints.
+2. In `.env` / Portainer variables set `CLAUDE_CODE_OAUTH_TOKEN=<token>` (leave `ANTHROPIC_API_KEY` empty).
+3. In `config/accounts.yaml` set `llm_backend: "cli"`.
+4. Use the CLI-enabled image: `MAILFORGE_IMAGE=ghcr.io/reza-t/mailforge-worker:latest-cli` (or build with `INSTALL_CLAUDE_CLI: "true"`).
+
+Usage then counts against your subscription limits instead of billing per token; the dollar figures in the telemetry are
+only informational and `max_daily_budget_usd` is a rough guard. With an API key set, `--bare` is used automatically.
 
 ## Security notes
 
