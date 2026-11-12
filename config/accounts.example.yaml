@@ -1,0 +1,50 @@
+# Copy to config/accounts.yaml and edit. Secrets are NEVER stored here:
+# every *_env value is the NAME of an environment variable defined in .env.
+
+settings:
+  lookback_hours: 24
+  triage_model: "claude-haiku-5-5"
+  synthesis_model: "claude-sonnet-5-5"
+  llm_backend: "sdk"            # "sdk" (Anthropic API) or "cli" (headless `claude -p`)
+  max_emails_per_run: 100
+  max_daily_budget_usd: 0.15    # circuit breaker across all runs of the same UTC day
+  vip_domains: []               # e.g. ["example.com"]: bypass bulk-header filters
+  ignore_senders: ["noreply@*", "*@marketing.*"]   # fnmatch patterns
+  # pricing_per_mtok:           # optional override, USD per million tokens [input, output]
+  #   claude-haiku-5-5: [1.0, 5.0]
+
+delivery:
+  enabled: true
+  method: "smtp"                # smtp | gmail | graph
+  recipient_env: "REPORT_RECIPIENT_EMAIL"
+  sender_env: "REPORT_SENDER_EMAIL"
+  smtp_host: "smtp.mail.yahoo.com"
+  smtp_port: 465
+  smtp_password_env: "YAHOO_APP_PASSWORD"
+  # smtp_user_env: "SMTP_USER"  # defaults to the sender address
+  # For method gmail/graph (token must carry gmail.send / Mail.Send):
+  # oauth_client_id_env: "DELIVERY_CLIENT_ID"
+  # oauth_client_secret_env: "DELIVERY_CLIENT_SECRET"
+  # oauth_refresh_token_env: "DELIVERY_REFRESH_TOKEN"
+
+accounts:
+  - id: gmail-1
+    provider: gmail
+    enabled: true
+    client_id_env: GMAIL_1_CLIENT_ID
+    client_secret_env: GMAIL_1_CLIENT_SECRET
+    refresh_token_env: GMAIL_1_REFRESH_TOKEN
+
+  - id: outlook-1
+    provider: outlook
+    enabled: true
+    tenant: "common"            # or your tenant id for work/school accounts
+    client_id_env: OUTLOOK_1_CLIENT_ID
+    refresh_token_env: OUTLOOK_1_REFRESH_TOKEN
+    # client_secret_env: OUTLOOK_1_CLIENT_SECRET   # only for confidential-client app registrations
+
+  - id: yahoo-1
+    provider: yahoo
+    enabled: true
+    username_env: YAHOO_1_USERNAME
+    password_env: YAHOO_1_APP_PASSWORD
