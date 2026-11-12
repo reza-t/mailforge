@@ -30,7 +30,7 @@ and unprocessed mail is retried next run. The report is always written to disk b
 git clone https://github.com/<you>/mailforge.git && cd mailforge
 cp .env.example .env && cp config/accounts.example.yaml config/accounts.yaml
 # edit both; set MAILFORGE_UID/GID to `id -u` / `id -g`
-docker compose build
+docker compose pull        # prebuilt image from GHCR (or `docker compose build` to build locally)
 docker compose run --rm mailforge-worker python -m mailforge.main --dry-run   # fetch + filter only, no LLM
 docker compose run --rm mailforge-worker python -m mailforge.main --force     # real run now
 docker compose up -d                                                           # daily at 07:30 (TZ from .env)
@@ -38,6 +38,8 @@ docker compose up -d                                                           #
 
 Add, remove or disable (`enabled: false`) accounts purely in `config/accounts.yaml` + `.env` — no code changes.
 CLI flags: `--dry-run` (no LLM, no state writes, no delivery), `--force` (ignore dedup + daily budget).
+
+> The `Publish image` workflow pushes `ghcr.io/<owner>/mailforge-worker` on every push to `main`. After the first run, set the package visibility to *Public* in GitHub (Packages) so `docker compose pull` works without login. Forks: set `MAILFORGE_IMAGE` in `.env`.
 
 ## Credentials
 

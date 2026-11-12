@@ -4,7 +4,9 @@ services:
       context: ./worker
       args:
         INSTALL_CLAUDE_CLI: "false"   # set "true" if llm_backend: "cli"
-    image: mailforge-worker:local
+    # Pulled from GHCR (built by .github/workflows/docker.yml); falls back to the local build above.
+    # Fork? set MAILFORGE_IMAGE=ghcr.io/<your-user>/mailforge-worker:latest in .env
+    image: ${MAILFORGE_IMAGE:-ghcr.io/reza-t/mailforge-worker:latest}
     container_name: mailforge-worker
     command: ["sleep", "infinity"]    # Ofelia execs the job inside this container
     user: "${MAILFORGE_UID:-1000}:${MAILFORGE_GID:-1000}"   # must own ./data and ./reports
