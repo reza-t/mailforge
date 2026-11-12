@@ -1,6 +1,6 @@
 # Running MailForge on a NAS
 
-Written for Synology DSM 7.2+ (Container Manager); QNAP Container Station, Unraid and TrueNAS differ only in where the UI lives.
+Written for Synology DSM 7.2+ (Container Manager); [UGREEN UGOS notes below](#ugreen-ugos-pro). QNAP, Unraid and TrueNAS differ only in where the UI lives.
 
 ## Requirements
 - Docker with Compose (Synology: *Container Manager*), SSH access, and an **x86-64 CPU**. The published image is amd64-only; on an ARM NAS build locally (`docker compose build`).
@@ -59,3 +59,25 @@ cd /volume1/docker/mailforge && git pull && sudo docker compose pull && sudo doc
 | `exec format error` | ARM NAS: use `docker compose build` |
 | Job never fires | Check `TZ`; `docker compose logs ofelia` should list `mailforge-daily` |
 | No email, report saved | See worker log: SMTP/app-password problem; the `.md` is still in `reports/` |
+
+## UGREEN (UGOS / UGOS Pro)
+
+UGREEN NAS models (DXP/DH/iDX series) are x86-64, so the prebuilt GHCR image works. The steps match the Synology ones above, with these differences:
+
+1. **Enable SSH:** Control Panel → Terminal → enable SSH, then `ssh <admin-user>@<nas-ip>`.
+2. **Install Docker:** App Center → install **Docker**. (Compose needs a recent UGOS; check with `docker compose version`. If it is missing, update UGOS first.)
+3. **Pick a location on a storage pool**, not the system disk, e.g. a shared folder you created in Files:
+   ```bash
+   cd /volume1/<your-shared-folder> && mkdir -p mailforge && cd mailforge   # adjust to your pool/volume path
+   git clone https://github.com/reza-t/mailforge.git . && mkdir -p data reports
+   ```
+   If `git` is not installed, download the ZIP from GitHub and upload it with Files.
+4. **UID/GID and permissions:** run `id` for your user (usually 1000+ and a group such as 10); set `MAILFORGE_UID`/`MAILFORGE_GID` to those and `sudo chown -R <uid>:<gid> data reports`. Set `TZ`, `chmod 600 .env`.
+5. **Run:** use the same `sudo docker compose pull / --dry-run / --force / up -d` commands as above.
+   In the Docker app you can instead use **Project → Create** and point it at the folder containing `docker-compose.yml`.
+6. **No Ofelia?** UGOS has no documented cron UI that I can vouch for; use `crontab -e` over SSH, or keep Ofelia (it only needs `/var/run/docker.sock`, which the Docker app provides):
+   ```
+   30 7 * * * docker exec mailforge-worker python -m mailforge.main
+   ```
+
+> I wrote the UGOS menu names from general knowledge and have not tested them on a UGREEN device; menu labels vary by UGOS version. The Docker commands themselves are standard.
